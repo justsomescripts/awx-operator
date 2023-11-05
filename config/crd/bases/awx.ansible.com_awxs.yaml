@@ -63,21 +63,29 @@ spec:
               admin_password_secret:
                 description: Secret where the admin password can be found
                 type: string
+                maxLength: 255
+                pattern: '^[a-zA-Z0-9][-a-zA-Z0-9]{0,253}[a-zA-Z0-9]$'
               postgres_configuration_secret:
                 description: Secret where the database configuration can be found
                 type: string
               old_postgres_configuration_secret:
                 description: Secret where the old database configuration can be found for data migration
                 type: string
+                maxLength: 255
+                pattern: '^[a-zA-Z0-9][-a-zA-Z0-9]{0,253}[a-zA-Z0-9]$'
               postgres_label_selector:
                 description: Label selector used to identify postgres pod for data migration
                 type: string
               secret_key_secret:
                 description: Secret where the secret key can be found
                 type: string
+                maxLength: 255
+                pattern: '^[a-zA-Z0-9][-a-zA-Z0-9]{0,253}[a-zA-Z0-9]$'
               broadcast_websocket_secret:
                 description: Secret where the broadcast websocket secret can be found
                 type: string
+                maxLength: 255
+                pattern: '^[a-zA-Z0-9][-a-zA-Z0-9]{0,253}[a-zA-Z0-9]$'
               extra_volumes:
                 description: Specify extra volumes to add to the application pod
                 type: string
@@ -1345,6 +1353,18 @@ spec:
               image_pull_secret:  # deprecated
                 description: (Deprecated) Image pull secret for app and database containers
                 type: string
+              host_aliases:
+                description: HostAliases for app containers
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ip:
+                      type: string
+                    hostnames:
+                      type: array
+                      items:
+                        type: string
               task_resource_requirements:
                 description: Resource requirements for the task container
                 properties:
@@ -1356,6 +1376,8 @@ spec:
                         type: string
                       storage:
                         type: string
+                      ephemeral-storage:
+                        type: string
                     type: object
                   limits:
                     properties:
@@ -1364,6 +1386,8 @@ spec:
                       memory:
                         type: string
                       storage:
+                        type: string
+                      ephemeral-storage:
                         type: string
                     type: object
                 type: object
@@ -1378,6 +1402,8 @@ spec:
                         type: string
                       storage:
                         type: string
+                      ephemeral-storage:
+                        type: string
                     type: object
                   limits:
                     properties:
@@ -1386,6 +1412,8 @@ spec:
                       memory:
                         type: string
                       storage:
+                        type: string
+                      ephemeral-storage:
                         type: string
                     type: object
                 type: object
@@ -1400,6 +1428,8 @@ spec:
                         type: string
                       storage:
                         type: string
+                      ephemeral-storage:
+                        type: string
                     type: object
                   limits:
                     properties:
@@ -1408,6 +1438,8 @@ spec:
                       memory:
                         type: string
                       storage:
+                        type: string
+                      ephemeral-storage:
                         type: string
                     type: object
                 type: object
@@ -1444,6 +1476,8 @@ spec:
                         type: string
                       storage:
                         type: string
+                      ephemeral-storage:
+                        type: string
                     type: object
                   limits:
                     properties:
@@ -1452,6 +1486,60 @@ spec:
                       memory:
                         type: string
                       storage:
+                        type: string
+                      ephemeral-storage:
+                        type: string
+                    type: object
+                type: object
+              rsyslog_resource_requirements:
+                description: Resource requirements for the rsyslog container
+                properties:
+                  requests:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+                      ephemeral-storage:
+                        type: string
+                    type: object
+                  limits:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+                      ephemeral-storage:
+                        type: string
+                    type: object
+                type: object
+              init_container_resource_requirements:
+                description: Resource requirements for the init container
+                properties:
+                  requests:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+                      ephemeral-storage:
+                        type: string
+                    type: object
+                  limits:
+                    properties:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                      storage:
+                        type: string
+                      ephemeral-storage:
                         type: string
                     type: object
                 type: object
@@ -1495,9 +1583,19 @@ spec:
                 type: array
                 items:
                   type: string
+              rsyslog_args:
+                type: array
+                items:
+                  type: string
+              rsyslog_command:
+                type: array
+                items:
+                  type: string
               task_extra_env:
                 type: string
               web_extra_env:
+                type: string
+              rsyslog_extra_env:
                 type: string
               ee_extra_env:
                 type: string
@@ -1509,6 +1607,27 @@ spec:
                 type: string
               web_extra_volume_mounts:
                 description: Specify volume mounts to be added to the Web container
+                type: string
+              uwsgi_processes:
+                description: Set the number of uwsgi processes to run in a web container
+                type: integer
+              uwsgi_listen_queue_size:
+                description: Set the socket listen queue size for uwsgi
+                type: integer
+              nginx_worker_processes:
+                description: Set the number of workers for nginx
+                type: integer
+              nginx_worker_connections:
+                description: Set the number of connections per worker for nginx
+                type: integer
+              nginx_worker_cpu_affinity:
+                description: Set the CPU affinity for nginx workers
+                type: string
+              nginx_listen_queue_size:
+                description: Set the socket listen queue size for nginx (defaults to same as uwsgi)
+                type: integer
+              rsyslog_extra_volume_mounts:
+                description: Specify volume mounts to be added to the Rsyslog container
                 type: string
               redis_image:
                 description: Registry path to the redis container to use
@@ -1596,6 +1715,25 @@ spec:
                 type: array
                 items:
                   type: string
+              postgres_keepalives:
+                description: Controls whether client-side TCP keepalives are used for Postgres connections.
+                default: true
+                type: boolean
+              postgres_keepalives_count:
+                description: Controls the number of TCP keepalives that can be lost before the client's connection to the server is considered dead.
+                type: integer
+                default: 5
+                format: int32
+              postgres_keepalives_idle:
+                description: Controls the number of seconds of inactivity after which TCP should send a keepalive message to the server.
+                type: integer
+                default: 5
+                format: int32
+              postgres_keepalives_interval:
+                description: Controls the number of seconds after which a TCP keepalive message that is not acknowledged by the server should be retransmitted.
+                type: integer
+                default: 5
+                format: int32
               ca_trust_bundle:
                 description: Path where the trusted CA bundle is available
                 type: string
@@ -1640,6 +1778,13 @@ spec:
                 type: string
               session_cookie_secure:
                 description: Set session cookie secure mode for web
+                type: string
+              postgres_security_context_settings:
+                description: Key/values that will be set under the pod-level securityContext field
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              receptor_log_level:
+                description: Set log level of receptor service
                 type: string
               extra_settings:
                 description: Extra settings to specify for the API

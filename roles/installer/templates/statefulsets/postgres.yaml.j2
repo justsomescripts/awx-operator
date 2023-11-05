@@ -51,6 +51,10 @@ spec:
         - image: '{{ _postgres_image }}'
           imagePullPolicy: '{{ image_pull_policy }}'
           name: postgres
+{% if postgres_security_context_settings|length %}
+          securityContext:
+            {{ postgres_security_context_settings | to_nice_yaml | indent(12) }}
+{% endif %}
 {% if postgres_extra_args %}
           args: {{ postgres_extra_args }}
 {% endif %}
@@ -94,6 +98,13 @@ spec:
               value: '{{ postgres_initdb_args }}'
             - name: POSTGRES_HOST_AUTH_METHOD
               value: '{{ postgres_host_auth_method }}'
+{% if 'resources' in old_pg_config and old_pg_config['resources'] and 'password' in old_pg_config['resources'][0]['data'] %}
+            - name: PGPASSWORD_OLD
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ old_pg_config['resources'][0]['metadata']['name'] }}'
+                  key: password
+{% endif %}
           ports:
             - containerPort: {{ awx_postgres_port | default('5432')}}
               name: postgres-{{ supported_pg_version }}
